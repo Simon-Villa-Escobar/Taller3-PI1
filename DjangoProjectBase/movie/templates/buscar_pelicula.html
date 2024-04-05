@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>Buscar Película</h1>
+    <form method="get" action="{% url 'buscar_pelicula' %}">
+        <input type="text" name="q" value="{{ query }}" placeholder="Ingrese su búsqueda">
+        <button type="submit">Buscar</button>
+    </form>
+
+    {% if resultados %}
+        <h2>Resultados de la búsqueda:</h2>
+        <div class="card">
+            <img src="{{ resultados.image.url }}" class="card-img-top" alt="..." style="max-width: 300px;">
+            <div class="card-body">
+                <h5 class="card-title fw-bold">{{ resultados.title }}</h5>
+                <p class="card-text">Descripción: {{ resultados.description }}</p>
+                <p class="card-text">Género: {{ resultados.genre }}</p>
+                <p class="card-text">Año: {{ resultados.year }}</p>
+            </div>
+        </div>
+    {% else %}
+        <p>No se encontraron resultados para '{{ query }}'.</p>
+    {% endif %}
+{% endblock %}

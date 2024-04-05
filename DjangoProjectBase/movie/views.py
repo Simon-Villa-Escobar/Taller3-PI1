@@ -1,5 +1,14 @@
 from django.shortcuts import render
 from django.http import HttpResponse
+from django.db.models import Q
+from django.shortcuts import render
+from django.db.models import Q
+from .models import Movie
+
+
+import numpy as np
+from openai import OpenAI
+import os
 
 from .models import Movie
 
@@ -7,6 +16,19 @@ import matplotlib.pyplot as plt
 import matplotlib
 import io
 import urllib, base64
+from dotenv import load_dotenv
+
+
+from django.core.management.base import BaseCommand
+from movie.models import Movie
+import os
+import numpy as np
+
+from openai import OpenAI
+
+from dotenv import load_dotenv, find_dotenv
+from movie.management.commands.check_rec_sys import get_embedding, cosine_similarity
+
 
 def home(request):
     #return HttpResponse('<h1>Welcome to Home Page</h1>')
@@ -123,3 +145,28 @@ def generate_bar_chart(data, xlabel, ylabel):
     buffer.close()
     graphic = base64.b64encode(image_png).decode('utf-8')
     return graphic
+
+
+def buscar_pelicula(request):
+    searchTerm = request.GET.get('q') 
+    resultados = []
+
+    if searchTerm:
+        load_dotenv('../openAI.env')
+        client = OpenAI(api_key=os.environ.get('openAI_api_key'))
+
+        items = Movie.objects.all()
+        emb_req = get_embedding(searchTerm, client)
+
+        sim = []
+        for item in items:
+            emb = item.emb
+            emb = list(np.frombuffer(emb))
+            sim.append(cosine_similarity(emb, emb_req))
+
+        sim = np.array(sim)
+        idx = np.argmax(sim)
+        idx = int(idx)
+        resultados = items[idx]
+
+    return render(request, 'buscar_pelicula.html', {'query': searchTerm, 'resultados': resultados})
